@@ -7,10 +7,16 @@ services:
     restart: always
     environment:
       - DOTNET_URLS=http://+:8080
-      - FAIL_ON_STARTUP=true
+      - FAIL_ON_STARTUP=false
     volumes:
       # Usamos la ruta completa que nos dio el debug para asegurar
       - ../deploy_temp:/app
     working_dir: /app
     # Now the runtime will find the 'dotnet' command
     entrypoint: ["dotnet", "CsharpAppBuildDocker.Api.dll"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s    # Cada cuánto tiempo hace la prueba
+      timeout: 10s     # Cuánto tiempo espera la respuesta
+      retries: 3       # Si falla 3 veces seguidas, lo marca como 'unhealthy'
+      start_period: 5s # Le da 5 segundos a la app para arrancar antes de probar
