@@ -1,9 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build_test_publish
 
-RUN apt-get update && \
-    apt-get install -y curl && \
-    rm -rf /var/lib/apt/lists/*
-	
 WORKDIR /src
 
 # Copy project files first for better layer caching during restore.
@@ -38,8 +34,12 @@ COPY --from=build_test_publish /artifacts/publish ./publish
 
 CMD ["sh", "-c", "echo Artifacts available under /artifacts; find /artifacts -maxdepth 4 -type f | sort"]
 
-# Final runtime image: copy published artifacts into the ASP.NET runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+
+RUN apt-get update && \
+    apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+	
 
 WORKDIR /app
 
