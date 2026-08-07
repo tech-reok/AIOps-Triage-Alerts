@@ -3,8 +3,11 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build_test_publish
 WORKDIR /src
 
 # Copy project files first for better layer caching during restore.
+# Copy project file for layer-cached restore.
 COPY src/CsharpAppBuildDocker.Api/CsharpAppBuildDocker.Api.csproj src/CsharpAppBuildDocker.Api/
 
+# Restore NuGet packages for the project (creates obj/project.assets.json).
+RUN dotnet restore src/CsharpAppBuildDocker.Api/CsharpAppBuildDocker.Api.csproj
 
 # Copy full source after restore.
 COPY . .
