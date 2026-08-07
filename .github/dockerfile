@@ -3,23 +3,23 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build_test_publish
 WORKDIR /src
 
 # Copy project files first for better layer caching during restore.
-COPY CsharpAppBuildDocker.Api/CsharpAppBuildDocker.Api.csproj CsharpAppBuildDocker.Api/
+COPY src/CsharpAppBuildDocker.Api/CsharpAppBuildDocker.Api.csproj src/CsharpAppBuildDocker.Api/
 
 
 # Copy full source after restore.
 COPY . .
 
 # 3) Build application and tests.
-RUN dotnet build CsharpAppBuildDocker.Api/CsharpAppBuildDocker.Api.csproj -c Release --no-restore 
+RUN dotnet build src/CsharpAppBuildDocker.Api/CsharpAppBuildDocker.Api.csproj -c Release --no-restore 
 
 # 5) Publish application and keep build artifacts.
-RUN dotnet publish CsharpAppBuildDocker.Api/CsharpAppBuildDocker.Api.csproj \
+RUN dotnet publish src/CsharpAppBuildDocker.Api/CsharpAppBuildDocker.Api.csproj \
 	-c Release \
 	--no-build \
 	-o /artifacts/publish
 
 RUN mkdir -p /artifacts/build/api \
-	&& cp -R CsharpAppBuildDocker.Api/bin/Release/net8.0/. /artifacts/build/api/ 
+	&& cp -R src/CsharpAppBuildDocker.Api/bin/Release/net8.0/. /artifacts/build/api/ 
 
 # 6) Create busybox image carrying build and coverage artifacts.
 FROM busybox:1.36 AS busybox_artifacts
