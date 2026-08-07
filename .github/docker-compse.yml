@@ -1,7 +1,7 @@
 services:
   api:
     build:
-      context: .
+      context: ..
       dockerfile: .github/dockerfile
     container_name: csharp-api-prod
     ports:
