@@ -37,3 +37,13 @@ COPY --from=build_test_publish /artifacts/build ./build
 COPY --from=build_test_publish /artifacts/publish ./publish
 
 CMD ["sh", "-c", "echo Artifacts available under /artifacts; find /artifacts -maxdepth 4 -type f | sort"]
+
+# Final runtime image: copy published artifacts into the ASP.NET runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+
+WORKDIR /app
+
+# Copy published output from the build stage
+COPY --from=build_test_publish /artifacts/publish/. /app
+
+ENTRYPOINT ["dotnet", "CsharpAppBuildDocker.Api.dll"]
