@@ -1,0 +1,42 @@
+name: Local AI Code Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+permissions:
+  pull-requests: write
+  issues: write 
+jobs:
+  ai_review:
+    runs-on: [self-hosted, Linux, X64, tech-reok-builders]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Obtain Diff
+        id: get_diff
+        run: |
+          git diff origin/main...HEAD > pr_diff.txt
+          echo "Diff guardado para análisis."
+
+      - name: Analising IA Code Security
+        env:
+          OLLAMA_URL: "http://127.0.0.1:11434/api/generate"
+          OLLAMA_MODEL: "qwen3:4b-custom" 
+        run: python3 .github/scripts/analyze_diff.py
+
+      - name: Commment PR (Review)
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const result = JSON.parse(fs.readFileSync('ai_response.json', 'utf8'));
+            
+            github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body: "🤖 **Automated Local Analysis:**\n\n" + result.response,
+              event: 'REQUEST_CHANGES'
+            })
