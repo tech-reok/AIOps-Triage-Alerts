@@ -1,6 +1,8 @@
 services:
   api:
-    image: mcr.microsoft.com/dotnet/aspnet:8.0
+    build:
+      context: .
+      dockerfile: .github/dockerfile
     container_name: csharp-api-prod
     ports:
       - "8089:8080"
