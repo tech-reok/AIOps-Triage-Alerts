@@ -76,37 +76,6 @@ jobs:
         run: |
           docker push "${{ steps.meta.outputs.docker_tag }}"
 
-      - name: Extract publish and coverage from image
-        shell: bash
-        working-directory: src
-        run: |
-          docker run --rm \
-            -v "${PWD}:/workspace" \
-            busybox:1.36 \
-            sh -c "rm -rf /workspace/publish /workspace/coverage /workspace/coveragereport"
-
-          mkdir -p coverage
-
-          if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            mkdir -p publish
-          fi
-
-          CID="$(docker create "${{ steps.meta.outputs.docker_tag }}")"
-          docker cp "${CID}:/artifacts/coverage/." ./coverage/
-
-          if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            docker cp "${CID}:/artifacts/publish/." ./publish/
-          fi
-
-          docker rm "${CID}"
-
-          echo "Extracted files:"
-          if [ -d publish ]; then
-            find publish coverage -maxdepth 4 -type f | sort
-          else
-            find coverage -maxdepth 4 -type f | sort
-          fi
-
       - name: Upload publish artifact
         id: upload_publish
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -115,46 +84,6 @@ jobs:
           name: publish-${{ steps.meta.outputs.short_sha }}
           path: src/publish/
           if-no-files-found: error
-
-      - name: Generate Report (containerized)
-        shell: bash
-        working-directory: src
-        run: |
-          docker run --rm \
-            -v "${PWD}:/workspace" \
-            -w /workspace \
-            --user "$(id -u):$(id -g)" \
-            mcr.microsoft.com/dotnet/sdk:8.0 \
-            bash -lc "export HOME=/tmp && dotnet tool install -g dotnet-reportgenerator-globaltool --version 5.* && export PATH=\$PATH:/tmp/.dotnet/tools && reportgenerator '-reports:/workspace/coverage/**/coverage.cobertura.xml' '-targetdir:/workspace/coveragereport' '-reporttypes:HtmlInline_AzurePipelines;MarkdownSummary' && \
-                     chmod -R 777 /workspace/coveragereport"
-
-      - name: Upload Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report-${{ steps.meta.outputs.short_sha }}
-          path: src/coveragereport/
-          if-no-files-found: error
-
-      - name: Capture coverage result
-        id: coverage_result
-        shell: bash
-        working-directory: src
-        run: |
-          SUMMARY_LINE="Coverage summary not found"
-          if [ -f coveragereport/Summary.md ]; then
-            MATCH="$(grep -Eo '[0-9]+([.][0-9]+)?%' coveragereport/Summary.md | head -n 1 || true)"
-            if [ -n "$MATCH" ]; then
-              SUMMARY_LINE="Line coverage: ${MATCH}"
-            else
-              SUMMARY_LINE="Coverage report generated (see Summary.md)"
-            fi
-          fi
-
-          {
-            echo "coverage_summary<<EOF"
-            echo "$SUMMARY_LINE"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
 
       - name: Job summary
         shell: bash
@@ -174,7 +103,6 @@ jobs:
             else
               echo "- Publish artifact id: not-uploaded (event: ${{ github.event_name }})"
             fi
-            echo "- Coverage result: ${{ steps.coverage_result.outputs.coverage_summary }}"
             echo ""
             if [ -f coveragereport/Summary.md ]; then
               echo "### Coverage report"
