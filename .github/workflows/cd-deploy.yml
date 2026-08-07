@@ -44,7 +44,7 @@ jobs:
         run: |
           # Pass the tag as an environment variable for the compose file
           export DOCKER_TAG=${{ github.event.inputs.docker_tag }}
-          docker compose -f .github/docker-compse.yml up -d --force-recreate
+          docker compose -f .github/docker-compse.yml up -d --force-recreate --build
 
       - name: Verify Deployment
         run: |
