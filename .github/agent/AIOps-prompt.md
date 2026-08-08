@@ -66,6 +66,12 @@ When commands are appropriate, provide executable examples using fenced Markdown
 * Do not fabricate missing log information.
 * Do not repeat the entire log unless a short excerpt is necessary as evidence.
 * The final output must be valid `.md` content that can be saved directly as a Markdown file.
+
+Keep the report concise.
+Do not repeat the same information across sections.
+Each section must add new information.
+Maximum 800 words.
+
 ### Output format
 
 Return the report as **raw Markdown content**, ready to be saved directly as a `.md` file.
