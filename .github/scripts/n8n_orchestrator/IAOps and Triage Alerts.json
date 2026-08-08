@@ -1,0 +1,230 @@
+{
+  "name": "IAOps and Triage Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "container-alert",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        0
+      ],
+      "id": "1b9305f8-5bfd-4f3e-ab2b-cd70d7a4258a",
+      "name": "Webhook",
+      "webhookId": "228b1211-c5dc-40fc-b5bd-7d1fed0f6c2d"
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "={{ $json.body.container_name }}"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        0
+      ],
+      "id": "6eef1479-9d97-4b5c-aeac-b02297c0c14f",
+      "name": "Execute a command",
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "s7CKznq0HB6pDrqe",
+          "name": "AIOps Agent ssh"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=here are the System logs:\\n  {{ $json.stdout }}",
+        "options": {
+          "systemMessage": "=You are an expert Site Reliability Engineer (SRE) specializing in Linux, Docker, Kubernetes, distributed systems, observability, and production incident response.\n\nA container has reported a critical failure.\n\n**Container:** `{{ $('Webhook').item.json.body.container_name }}`\n\nAnalyze the provided error logs and produce a concise but technically detailed incident report in **valid Markdown format**.\n\nYour objectives are to:\n\n1. Identify the immediate failure.\n2. Determine the most likely root cause based strictly on the available evidence.\n3. Distinguish confirmed facts from assumptions or hypotheses.\n4. Identify relevant error messages, patterns, timestamps, exit codes, signals, or stack traces.\n5. Explain the technical chain of events that led to the failure.\n6. Provide concrete remediation steps and, when applicable, preventive actions.\n\n## 🚨 Detected fail\n\nInclude:\n\n* A concise description of what failed.\n* The affected container/service.\n* The relevant error message(s).\n* Exit code, signal, or failure status if available.\n* Timestamp or sequence of events if available.\n* Impact of the failure.\n* Evidence from the logs supporting the findings.\n\n## 🔍 Root cause analisys (RCA)\n\nInclude:\n\n* **Root cause:** The most likely technical root cause.\n* **Evidence:** Specific log evidence supporting the conclusion.\n* **Failure chain:** Explain step-by-step how the failure occurred.\n* **Contributing factors:** Configuration, resource, dependency, deployment, networking, or application issues that contributed to the incident.\n* **Confidence:** High / Medium / Low.\n* **Uncertainty:** Clearly state what cannot be determined from the provided logs.\n\nDo not invent information that is not present in the logs. If the root cause cannot be determined with reasonable confidence, explicitly state that additional evidence is required and explain what evidence should be collected.\n\n## 💡 Recommended solution\n\nProvide prioritized remediation steps:\n\n1. **Immediate mitigation:** Actions required to restore service or prevent further impact.\n2. **Permanent fix:** Changes required to eliminate the root cause.\n3. **Preventive actions:** Monitoring, alerting, configuration changes, testing, automation, or operational improvements that could prevent recurrence.\n4. **Verification:** Commands, checks, metrics, or tests that should be used to confirm the issue has been resolved.\n\nWhen commands are appropriate, provide executable examples using fenced Markdown code blocks.\n\n### Output requirements\n\n* Return **only the Markdown report**.\n* Do not include greetings, introductions, conclusions, or commentary outside the report.\n* Use exactly these three top-level sections:\n\n  * `# 🚨 Detected fail`\n  * `# 🔍 Root cause analisys (RCA)`\n  * `# 💡 Recommended solution`\n* Use subsections, bullet points, tables, and code blocks where they improve clarity.\n* Be direct, technical, and concise.\n* Do not speculate without clearly labeling the speculation.\n* Do not fabricate missing log information.\n* Do not repeat the entire log unless a short excerpt is necessary as evidence.\n* The final output must be valid `.md` content that can be saved directly as a Markdown file.\n\nKeep the report concise.\nDo not repeat the same information across sections.\nEach section must add new information.\nMaximum 800 words.\n\n### Output format\n\nReturn the report as **raw Markdown content**, ready to be saved directly as a `.md` file.\n\n* Do not wrap the entire response in a Markdown code block.\n* Do not include ` ```markdown ` or ` ``` ` around the complete report.\n* Do not include any text before or after the report.\n* The response itself must be valid Markdown.\n* Use Markdown headings, lists, tables, and fenced code blocks where appropriate.\n* The output filename should be:\n\n`{{ $('Webhook').item.json.body.container_name }}-incident-report.md`\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        32,
+        16
+      ],
+      "id": "8ba4c27e-f5f7-40d3-8b94-23bb3e89b30c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $workflow.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        208
+      ],
+      "id": "4957d795-0489-4e53-8bee-749a90216221",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        208
+      ],
+      "id": "250a86cf-0391-443d-9702-02c44c26d7ea",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "TuNFmcglEmogezQj",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "value": "tech-reok",
+          "mode": "list",
+          "cachedResultName": "tech-reok",
+          "cachedResultUrl": "https://github.com/tech-reok"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "AIOps-Triage-Alerts",
+          "mode": "list",
+          "cachedResultName": "AIOps-Triage-Alerts",
+          "cachedResultUrl": "https://github.com/tech-reok/AIOps-Triage-Alerts"
+        },
+        "filePath": "=.github/agent/reports/incident-reports/RCA-{{$node[\"Webhook\"].json.body.container_name}}-{{$now.format('yyyyMMddhhmm')}}.md",
+        "fileContent": "={{ $json.output }}",
+        "commitMessage": "=chore(aiops): auto-generated RCA report for {{$node[\"Webhook\"].json.body.container_name}}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        352,
+        16
+      ],
+      "id": "48e48e1b-8003-4e0a-874d-758e7a966b3e",
+      "name": "Create a file",
+      "webhookId": "b7c324f8-84aa-4514-b532-dabb621b55cd",
+      "credentials": {
+        "githubApi": {
+          "id": "fnGk5ukDRBgIGghG",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "qwen3:4b-sre-v",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        224
+      ],
+      "id": "493c9d18-d33c-452f-aa6a-d2142446543b",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "c9XYgbwZqymtFuyq",
+          "name": "Ollama account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a command": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "db65ad1c-75df-477d-9d5a-bf01f4cde102",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5975cdd31587979c4c5ae46b8d3feee52c68b1633e27a6beb3c9eaf8acca5532"
+  },
+  "id": "SgJtxCNtbH7Kuw3k",
+  "tags": []
+}
