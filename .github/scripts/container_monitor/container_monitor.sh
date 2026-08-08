@@ -1,6 +1,6 @@
 #!/bin/bash
 
-N8N_WEBHOOK_URL="http://127.0.0.1:5678/webhook/container-alert"
+N8N_WEBHOOK_URL="https://n8n.tech-reok.dev/webhook-test/container-alert"
 
 echo "Iniciando monitor avanzado de eventos de Docker..."
 
