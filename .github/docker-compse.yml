@@ -9,7 +9,8 @@ services:
     restart: always
     environment:
       - DOTNET_URLS=http://+:8080
-      - FAIL_ON_STARTUP=true
+      - FAIL_ON_STARTUP=false
+      - HEALTH_FAIL=true
     volumes:
       # Usamos la ruta completa que nos dio el debug para asegurar
       - ../deploy_temp:/app
