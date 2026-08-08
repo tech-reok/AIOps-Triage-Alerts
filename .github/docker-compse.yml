@@ -10,7 +10,7 @@ services:
     environment:
       - DOTNET_URLS=http://+:8080
       - FAIL_ON_STARTUP=false
-      - HEALTH_FAIL=true
+      - HEALTH_FAIL=false
     volumes:
       # Usamos la ruta completa que nos dio el debug para asegurar
       - ../deploy_temp:/app
